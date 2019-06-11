@@ -326,3 +326,18 @@ table td {
     page-break-after: avoid;
   }
 }
+.sourceCode{
+    background-color: rgb(35, 35, 35);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-radius: 3px;
+}
+a.sourceLine{
+    padding-left: 4px;
+    padding-right: 4px;
+}
+code span.ot { color: rgb(230, 205, 105) ; } /* Other */
+code span.dt {color: rgb(85, 181, 219); }
+code span.op {color: rgb(159, 202, 86); }
+code span.co {color: rgb(71, 91, 100);}
+code {color: rgb(160, 116, 196); }

@@ -336,8 +336,9 @@ a.sourceLine{
     padding-left: 4px;
     padding-right: 4px;
 }
-code span.ot { color: rgb(230, 205, 105) ; !important} /* Other */
-code span.dt {color: rgb(85, 181, 219); !important}
-code span.op {color: rgb(159, 202, 86); !important}
-code span.co {color: rgb(71, 91, 100); !important}
-code {color: rgb(160, 116, 196); !important}
+code span.ot { color: rgb(230, 205, 105) ; } /* Other */
+code span.dt {color: rgb(85, 181, 219); }
+code span.op {color: rgb(159, 202, 86); }
+code span.fu {color: rgb(159, 202, 86); }
+code span.co {color: rgb(71, 91, 100);}
+code {color: rgb(160, 116, 196); }

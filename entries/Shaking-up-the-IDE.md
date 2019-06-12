@@ -4,11 +4,11 @@ title: Shaking up the IDE
 
 Recently at Digital Asset we open sourced our programming language [DAML](https://daml.com/), but I'm not going to talk about that today. Nestled inside this compiler is the [Haskell IDE Core](https://github.com/digital-asset/daml/tree/master/compiler/haskell-ide-core).
 
-You might ask, what a Haskell IDE is doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we instead piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non trivial amount of time to run.
+You might ask, what a Haskell IDE is doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non trivial amount of time to run.
 
 The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks [Shake](https://shakebuild.com/) can be made to run in real time.
 
-So what does a build rule look like in IDE Engine? It's just a shake rule, except instead of indexing by file type we index using types + filepaths.
+So what does a build rule look like in IDE Engine? It's just a shake rule, except instead of indexing by file type we index using types + filepaths. Here's how you parse a file.
 
 ```haskell
 getParsedModuleRule :: Rules ()
@@ -17,8 +17,10 @@ getParsedModuleRule =
         contents <- use_ GetFileContents file
         packageState <- use_ GhcSession ""
         opt <- getOpts
-        liftIO $ Compile.parseModule opt packageState file contents
+        liftIO $ parseModule opt packageState file contents
 ```
+The LSP bindings populate the buffer contents into the shake graph and if your rules depend directly or transitively on them they will be rerun on the buffer change. `define` creates a rule and `use_` or `uses_` either runs the rule or pulls a pre-computed value from the cache. `parseModule` is a pure(ish) function which does the heavy lifting of parsing the text.
+
 
 ```haskell
 typeCheckRule :: Rules ()
@@ -30,18 +32,15 @@ typeCheckRule =
         setPriority PriorityTypeCheck
         liftIO $ typecheckModule pm tms
 ```
-`define` creates a rule and `use_` or `uses_` either runs the rule or pulls a pre-computed value from the cache. `typecheckModule` is a pure(ish) function which gives you a type checked module from a parsed module and it's type checked dependencies. 
+
+There's a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency graph with minimal work.
+
+Shake takes care of all the heavy lifting such as caching/garbage collection. Each rule outputs a tuple of the `RuleResult` and `FileDiagnostics`. `FileDiagnostics` are a [Language Server Protocol (LSP)](https://langserver.org/) data construct, put simply it generates the squiggly lines and messages indicating errors, hints or warnings in your code. Shake sends and invalidates these results when appropriate.
 
 ```haskell
-data TypeCheck = TypeCheck
-    deriving (Eq, Show, Typeable, Generic)
-instance Hashable TypeCheck
-instance NFData   TypeCheck
-
+type instance RuleResult GetParsedModule = ParsedModule
 type instance RuleResult TypeCheck = TcModuleResult
 ```
-The rule is indexed by the type and file. Shake takes care of all the heavy lifting such as caching/garbage collection. Each rule outputs a tuple of the `RuleResult` and `FileDiagnostics`. `FileDiagnostics` are a [Language Server Protocol (LSP)](https://langserver.org/) data construct, put simply it generates the squiggly lines and messages indicating errors, hints or warnings in your code. Shake sends and invalidates these results when appropriate.
-
 Once you've written your rules wire them together in your mainRule then run that rule in shake.
 
 ```haskell

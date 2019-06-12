@@ -1,4 +1,4 @@
 ---
 title: Posts
 ---
-[Shaking up the IDE](posts/Shaking-up-the-IDE.html)
+[Shaking up the IDE](p/Shaking-up-the-IDE.html)

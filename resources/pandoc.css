@@ -342,3 +342,7 @@ code span.op {color: rgb(159, 202, 86); }
 code span.fu {color: rgb(159, 202, 86); }
 code span.co {color: rgb(71, 91, 100);}
 code {color: rgb(160, 116, 196); }
+
+span.weak {
+    color: rgb(120,120,120);
+}

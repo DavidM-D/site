@@ -4,13 +4,11 @@ title: Shaking up the IDE
 
 Recently at Digital Asset we open sourced our programming language [DAML](https://daml.com/), but I'm not going to talk about that today. Nestled inside this compiler is the [Haskell IDE Core](https://github.com/digital-asset/daml/tree/master/compiler/haskell-ide-core).
 
-It's reasonable to ask what a Haskell IDE is doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we instead piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and can sometimes take quite a long time to run. 
+You might ask, what a Haskell IDE is doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we instead piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non trivial amount of time to run.
 
-We largely preserve API compatibility with out GHC fork so any Haskell IDE is also a DAML IDE.
+The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks [Shake](https://shakebuild.com/) can be made to run in real time.
 
-When you have a number of interdependent, long running build steps written in different languages the reasonable first instinct is to reach for a build system. Build systems are normally optimized for batch jobs, but with some tweaks shake can be made to run in real time.
-
-So what does a build rule look like in IDE Engine, well it's pretty much a shake rule except instead of files we use types + files.
+So what does a build rule look like in IDE Engine? It's just a shake rule, except instead of indexing by file type we index using types + filepaths.
 ```haskell
 typeCheckRule :: Rules ()
 typeCheckRule =
@@ -31,4 +29,23 @@ instance NFData   TypeCheck
 
 type instance RuleResult TypeCheck = TcModuleResult
 ```
-The rule is indexed by the type and file. Shake takes care of all the heavy lifting such as caching/garbage collection and scheduling. You just have to write the rules and not worry about it. Each rule outputs a tuple of the RuleResult and FileDiagnostics.
+The rule is indexed by the type and file. Shake takes care of all the heavy lifting such as caching/garbage collection. Each rule outputs a tuple of the `RuleResult` and `FileDiagnostics`. `FileDiagnostics` are a [Language Server Protocol (LSP)](https://langserver.org/) data construct, put simply it generates the squiggly lines and messages indicating errors, hints or warnings related to your code. Shake sends and invalidates these results.
+
+Once you've written your rules wire them together in your mainRule then run that rule in shake.
+
+```haskell
+mainRule :: Rules ()
+mainRule = do
+    getParsedModuleRule
+    getLocatedImportsRule
+    getDependencyInformationRule
+    reportImportCyclesRule
+    getDependenciesRule
+    typeCheckRule
+    getSpanInfoRule
+    generateCoreRule
+    loadGhcSession
+    getHieFileRule
+```
+
+By allowing the IDE to be more "à la carte

@@ -4,7 +4,7 @@ title: Shaking up the IDE
 
 Recently at Digital Asset we open sourced our programming language [DAML](https://daml.com/), but I'm not going to talk about that today. Nestled inside its compiler is the [Haskell IDE Core](https://github.com/digital-asset/daml/tree/master/compiler/haskell-ide-core). I'm going to explain what that project is in this blog post.
 
-You might ask, what is some part of a Haskell IDE doing inside of DAML? DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker etc we piggyback off the fine work done for GHC. 
+You might ask, what is some part of a Haskell IDE doing inside of DAML? DAML is built on a tweaked version of the GHC API using [GHC Lib](https://neilmitchell.blogspot.com/2019/02/announcing-ghc-lib.html). Rather than writing our own parser, type checker etc we piggyback off the fine work done for GHC. 
 
 The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non-trivial amount of time to run. The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks [Shake](https://shakebuild.com/) can be [made to run in real time](https://neilmitchell.blogspot.com/2018/10/announcing-shake-017.html).
 

@@ -67,4 +67,4 @@ The hope is that we can add this to [Haskell IDE Engine](https://github.com/hask
 ---
 [Opinions are my own and not the views of my employer]{.weak}
 
-[David Millar-Durrant - 12 Jun 2019]{.weak}
+[David Millar-Durrant - 13 Jun 2019]{.weak}

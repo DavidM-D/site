@@ -4,7 +4,7 @@ title: Shaking up the IDE
 
 Recently at Digital Asset we open sourced our programming language [DAML](https://daml.com/), but I'm not going to talk about that today. Nestled inside this compiler is the [Haskell IDE Core](https://github.com/digital-asset/daml/tree/master/compiler/haskell-ide-core).
 
-You might ask, what a Haskell IDE is doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non trivial amount of time to run.
+You might ask, what is some part of a Haskell IDE doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non trivial amount of time to run.
 
 The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks [Shake](https://shakebuild.com/) can be [made to run in real time](https://neilmitchell.blogspot.com/2018/10/announcing-shake-017.html).
 
@@ -33,7 +33,7 @@ typeCheckRule =
         liftIO $ typecheckModule pm tms
 ```
 
-Type checking is much slower than parsing to we attach a lower priority to this rule to keep the IDE responsive. There's a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency pretty easily.
+Type checking is much slower than parsing to we attach a lower priority to this rule to keep the IDE responsive. There's a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency graph pretty easily.
 
 Shake takes care of all the heavy lifting such as caching/garbage collection. Each rule outputs a tuple of the `RuleResult` and `FileDiagnostics`. `FileDiagnostics` are a [Language Server Protocol (LSP)](https://langserver.org/) data construct, put simply it generates the squiggly lines and messages indicating errors, hints or warnings in your code. Shake sends and invalidates these results when appropriate.
 
@@ -41,7 +41,7 @@ Shake takes care of all the heavy lifting such as caching/garbage collection. Ea
 type instance RuleResult GetParsedModule = ParsedModule
 type instance RuleResult TypeCheck = TcModuleResult
 ```
-Once you've written your rules wire them together in your mainRule then run that rule in shake database.
+Once you've written your rules wire them together in your mainRule then run that rule in the shake database.
 
 ```haskell
 mainRule :: Rules ()

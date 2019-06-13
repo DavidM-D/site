@@ -6,7 +6,7 @@ Recently at Digital Asset we open sourced our programming language [DAML](https:
 
 You might ask, what a Haskell IDE is doing inside of DAML. DAML is built on a tweaked version of the GHC API. Rather than writing our own parser, type checker ect we piggyback off the fine work done for GHC. The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non trivial amount of time to run.
 
-The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks [Shake](https://shakebuild.com/) can be made to run in real time.
+The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks [Shake](https://shakebuild.com/) can be [made to run in real time](https://neilmitchell.blogspot.com/2018/10/announcing-shake-017.html).
 
 So what does a build rule look like in IDE Engine? It's just a shake rule, except instead of indexing by file type we index using types + filepaths. Here's how you parse a file.
 
@@ -33,7 +33,7 @@ typeCheckRule =
         liftIO $ typecheckModule pm tms
 ```
 
-There's a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency graph with minimal work.
+Type checking is much slower than parsing to we attach a lower priority to this rule to keep the IDE responsive. There's a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency pretty easily.
 
 Shake takes care of all the heavy lifting such as caching/garbage collection. Each rule outputs a tuple of the `RuleResult` and `FileDiagnostics`. `FileDiagnostics` are a [Language Server Protocol (LSP)](https://langserver.org/) data construct, put simply it generates the squiggly lines and messages indicating errors, hints or warnings in your code. Shake sends and invalidates these results when appropriate.
 
@@ -41,7 +41,7 @@ Shake takes care of all the heavy lifting such as caching/garbage collection. Ea
 type instance RuleResult GetParsedModule = ParsedModule
 type instance RuleResult TypeCheck = TcModuleResult
 ```
-Once you've written your rules wire them together in your mainRule then run that rule in shake.
+Once you've written your rules wire them together in your mainRule then run that rule in shake database.
 
 ```haskell
 mainRule :: Rules ()
@@ -58,9 +58,11 @@ mainRule = do
     getHieFileRule
 ```
 
-IDE Core allows a far more à la carte approach to putting together your IDE. You only have to add the rules that make sense for your setup and the low barrier to entry will hopefully foster an ecosystem of rules for the multitude of haskell setups.
+IDE Core allows a far more à la carte approach to putting together your IDE. You only have to add the rules that make sense for your setup and the low barrier to entry will hopefully foster an ecosystem of rules for the multitude of haskell setups and tools.
 
-It's not ready for primetime at the moment, currently it's a little light on IDE features and can only get dependencies with a specially crafted .ghci file. I'm running a project with Neil Mitchell at Zurihac this weekend for anyone who feels like getting involved and contributing some IDE rules. 
+It's not ready for primetime at the moment, currently it's a little light on IDE features and can only get dependencies with a specially crafted .ghci file. I'm running a project with Neil Mitchell at Zurihac this weekend for anyone who feels like getting involved and contributing some IDE rules.
+
+The hope is that we can add this to [Haskell IDE Engine](https://github.com/haskell/haskell-ide-engine) as a dependency to simplify the architecture and as an improvement on the existing plugin architecture. 
 
 ---
 [Opinions are my own and not the views of my employer]{.weak}

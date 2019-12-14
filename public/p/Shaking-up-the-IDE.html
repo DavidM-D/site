@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shaking up the IDE</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="dmd" />
+<link rel="stylesheet" type="text/css" href="../pandoc.css" />
+</head>
+<body>
+<div id="content">
+<h1 class="title">Shaking up the IDE</h1>
+<p>
+Recently at Digital Asset we open sourced our programming language <a href="https://daml.com/">DAML</a>, but I&rsquo;m not going to talk about that today. Nestled inside its compiler is the <a href="https://github.com/digital-asset/ghcide">Haskell IDE Core</a><sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>. I&rsquo;m going to explain what that project is in this blog post. 
+</p>
+
+
+
+<p>
+You might ask, what is some part of a Haskell IDE doing inside of DAML? DAML is built on a tweaked version of the GHC API using <a href="https://neilmitchell.blogspot.com/2019/02/announcing-ghc-lib.html">GHC Lib</a>. Rather than writing our own parser, type checker etc we piggyback off the fine work done for GHC. 
+</p>
+
+<p>
+The differences between DAML and Haskell are generally found in tweaks to parse trees, custom backends and interesting ways of interpreting the compiler output. These steps are written in various languages and take a non-trivial amount of time to run. The best way of wrangling long running computations written in different languages is to use a build system. Build systems are normally optimized for batch jobs, but with some tweaks <a href="https://shakebuild.com/">Shake</a> can be <a href="https://neilmitchell.blogspot.com/2018/10/announcing-shake-017.html">made to run in real time</a>.
+</p>
+
+<p>
+So what does a build rule look like in IDE Engine? It&rsquo;s just a shake rule, except instead of indexing by file type we index using types + filepaths. Here&rsquo;s how you parse a file.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-haskell"><span class="org-haskell-definition">getParsedModuleRule</span> <span class="org-haskell-operator">::</span> <span class="org-haskell-type">Rules</span> <span class="org-haskell-constructor">()</span>
+<span class="org-haskell-definition">getParsedModuleRule</span> <span class="org-haskell-operator">=</span>
+    define <span class="org-haskell-operator">$</span> <span class="org-haskell-operator">\</span><span class="org-haskell-constructor">GetParsedModule</span> file <span class="org-haskell-operator">-&gt;</span> <span class="org-haskell-keyword">do</span>
+        contents <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GetFileContents</span> file
+        packageState <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GhcSession</span> <span class="org-string">""</span>
+        opt <span class="org-haskell-operator">&lt;-</span> getOpts
+        liftIO <span class="org-haskell-operator">$</span> parseModule opt packageState file contents
+</pre>
+</div>
+<p>
+The LSP bindings populate the buffer contents into the shake graph and if your rules depend directly or transitively on them they will be rerun on the buffer change. <code>define</code> creates a rule and <code>use_</code> or <code>uses_</code> either runs the rule or pulls a pre-computed value from the cache. <code>parseModule</code> is a pure(ish) function which does the heavy lifting of parsing the text.
+</p>
+
+
+<div class="org-src-container">
+<pre class="src src-haskell"><span class="org-haskell-definition">typeCheckRule</span> <span class="org-haskell-operator">::</span> <span class="org-haskell-type">Rules</span> <span class="org-haskell-constructor">()</span>
+<span class="org-haskell-definition">typeCheckRule</span> <span class="org-haskell-operator">=</span>
+    define <span class="org-haskell-operator">$</span> <span class="org-haskell-operator">\</span><span class="org-haskell-constructor">TypeCheck</span> file <span class="org-haskell-operator">-&gt;</span> <span class="org-haskell-keyword">do</span>
+        pm <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GetParsedModule</span> file
+        deps <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GetDependencies</span> file
+        tms <span class="org-haskell-operator">&lt;-</span> uses_ <span class="org-haskell-constructor">TypeCheck</span> deps
+        setPriority <span class="org-haskell-constructor">PriorityTypeCheck</span>
+        liftIO <span class="org-haskell-operator">$</span> typecheckModule pm tms
+</pre>
+</div>
+
+<p>
+Type checking is much slower than parsing so we attach a lower priority to this rule to keep the IDE responsive. There&rsquo;s a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency graph pretty easily.
+</p>
+
+<p>
+Shake takes care of all the heavy lifting such as caching/garbage collection. Each rule outputs a tuple of the <code>RuleResult</code> and <code>FileDiagnostics</code>. <code>FileDiagnostics</code> are a <a href="https://langserver.org/">Language Server Protocol (LSP)</a> data construct, put simply it generates the squiggly lines and messages indicating errors, hints or warnings in your code. Shake sends and invalidates these results when appropriate.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-haskell"><span class="org-haskell-keyword">type</span> <span class="org-haskell-keyword">instance</span> <span class="org-haskell-type">RuleResult</span> <span class="org-haskell-type">GetParsedModule</span> <span class="org-haskell-operator">=</span> <span class="org-haskell-type">ParsedModule</span>
+<span class="org-haskell-keyword">type</span> <span class="org-haskell-keyword">instance</span> <span class="org-haskell-type">RuleResult</span> <span class="org-haskell-type">TypeCheck</span> <span class="org-haskell-operator">=</span> <span class="org-haskell-type">TcModuleResult</span>
+</pre>
+</div>
+<p>
+Once you&rsquo;ve written your rules wire them together in your mainRule then run that rule in the shake database.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-haskell"><span class="org-haskell-definition">mainRule</span> <span class="org-haskell-operator">::</span> <span class="org-haskell-type">Rules</span> <span class="org-haskell-constructor">()</span>
+<span class="org-haskell-definition">mainRule</span> <span class="org-haskell-operator">=</span> <span class="org-haskell-keyword">do</span>
+    getParsedModuleRule
+    getLocatedImportsRule
+    getDependencyInformationRule
+    reportImportCyclesRule
+    getDependenciesRule
+    typeCheckRule
+    getSpanInfoRule
+    generateCoreRule
+    loadGhcSession
+    getHieFileRule
+</pre>
+</div>
+
+<p>
+IDE Core allows a far more à la carte approach to putting together your IDE. You only have to add the rules that make sense for your setup and the low barrier to entry will hopefully foster an ecosystem of rules for the multitude of haskell setups and tools.
+</p>
+
+<p>
+It&rsquo;s not ready for primetime at the moment, currently it&rsquo;s a little light on IDE features and can only get dependencies with a specially crafted .ghci file. I&rsquo;m running a project with Neil Mitchell at Zurihac this weekend for anyone who feels like getting involved and contributing some IDE rules.
+</p>
+
+<p>
+The hope is that we can add this to <a href="https://github.com/haskell/haskell-ide-engine">Haskell IDE Engine</a> as a dependency to simplify the architecture and as an improvement on the existing plugin architecture. 
+</p>
+
+<hr />
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">This has since been renamed GHC IDE</p></div></div>
+
+
+</div>
+</div></div>
+</body>
+</html>

@@ -3,6 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
+<!-- 2019-12-14 Sa 22:49 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Shaking up the IDE</title>
@@ -14,7 +15,7 @@
 <div id="content">
 <h1 class="title">Shaking up the IDE</h1>
 <p>
-Recently at Digital Asset we open sourced our programming language <a href="https://daml.com/">DAML</a>, but I&rsquo;m not going to talk about that today. Nestled inside its compiler is the <a href="https://github.com/digital-asset/ghcide">Haskell IDE Core</a><sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>. I&rsquo;m going to explain what that project is in this blog post. 
+Recently at Digital Asset we open sourced our programming language <a href="https://daml.com/">DAML</a>, but I'm not going to talk about that today. Nestled inside its compiler is the <a href="https://github.com/digital-asset/ghcide">Haskell IDE Core</a><sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>. I'm going to explain what that project is in this blog post. 
 </p>
 
 
@@ -28,17 +29,17 @@ The differences between DAML and Haskell are generally found in tweaks to parse 
 </p>
 
 <p>
-So what does a build rule look like in IDE Engine? It&rsquo;s just a shake rule, except instead of indexing by file type we index using types + filepaths. Here&rsquo;s how you parse a file.
+So what does a build rule look like in IDE Engine? It's just a shake rule, except instead of indexing by file type we index using types + filepaths. Here's how you parse a file.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-haskell"><span class="org-haskell-definition">getParsedModuleRule</span> <span class="org-haskell-operator">::</span> <span class="org-haskell-type">Rules</span> <span class="org-haskell-constructor">()</span>
-<span class="org-haskell-definition">getParsedModuleRule</span> <span class="org-haskell-operator">=</span>
-    define <span class="org-haskell-operator">$</span> <span class="org-haskell-operator">\</span><span class="org-haskell-constructor">GetParsedModule</span> file <span class="org-haskell-operator">-&gt;</span> <span class="org-haskell-keyword">do</span>
-        contents <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GetFileContents</span> file
-        packageState <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GhcSession</span> <span class="org-string">""</span>
-        opt <span class="org-haskell-operator">&lt;-</span> getOpts
-        liftIO <span class="org-haskell-operator">$</span> parseModule opt packageState file contents
+<pre class="src src-haskell"><span style="color: #bc6ec5; font-weight: bold;">getParsedModuleRule</span> <span style="color: #7590db;">::</span> <span style="color: #ce537a; font-weight: bold;">Rules</span> <span style="color: #4f97d7; font-weight: bold;">()</span>
+<span style="color: #bc6ec5; font-weight: bold;">getParsedModuleRule</span> <span style="color: #7590db;">=</span>
+    define <span style="color: #7590db;">$</span> <span style="color: #7590db;">\</span><span style="color: #ce537a; font-weight: bold;">GetParsedModule</span> file <span style="color: #7590db;">-&gt;</span> <span style="color: #4f97d7; font-weight: bold;">do</span>
+        contents <span style="color: #7590db;">&lt;-</span> use_ <span style="color: #ce537a; font-weight: bold;">GetFileContents</span> file
+        packageState <span style="color: #7590db;">&lt;-</span> use_ <span style="color: #ce537a; font-weight: bold;">GhcSession</span> <span style="color: #2d9574;">""</span>
+        opt <span style="color: #7590db;">&lt;-</span> getOpts
+        liftIO <span style="color: #7590db;">$</span> parseModule opt packageState file contents
 </pre>
 </div>
 <p>
@@ -47,19 +48,19 @@ The LSP bindings populate the buffer contents into the shake graph and if your r
 
 
 <div class="org-src-container">
-<pre class="src src-haskell"><span class="org-haskell-definition">typeCheckRule</span> <span class="org-haskell-operator">::</span> <span class="org-haskell-type">Rules</span> <span class="org-haskell-constructor">()</span>
-<span class="org-haskell-definition">typeCheckRule</span> <span class="org-haskell-operator">=</span>
-    define <span class="org-haskell-operator">$</span> <span class="org-haskell-operator">\</span><span class="org-haskell-constructor">TypeCheck</span> file <span class="org-haskell-operator">-&gt;</span> <span class="org-haskell-keyword">do</span>
-        pm <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GetParsedModule</span> file
-        deps <span class="org-haskell-operator">&lt;-</span> use_ <span class="org-haskell-constructor">GetDependencies</span> file
-        tms <span class="org-haskell-operator">&lt;-</span> uses_ <span class="org-haskell-constructor">TypeCheck</span> deps
-        setPriority <span class="org-haskell-constructor">PriorityTypeCheck</span>
-        liftIO <span class="org-haskell-operator">$</span> typecheckModule pm tms
+<pre class="src src-haskell"><span style="color: #bc6ec5; font-weight: bold;">typeCheckRule</span> <span style="color: #7590db;">::</span> <span style="color: #ce537a; font-weight: bold;">Rules</span> <span style="color: #4f97d7; font-weight: bold;">()</span>
+<span style="color: #bc6ec5; font-weight: bold;">typeCheckRule</span> <span style="color: #7590db;">=</span>
+    define <span style="color: #7590db;">$</span> <span style="color: #7590db;">\</span><span style="color: #ce537a; font-weight: bold;">TypeCheck</span> file <span style="color: #7590db;">-&gt;</span> <span style="color: #4f97d7; font-weight: bold;">do</span>
+        pm <span style="color: #7590db;">&lt;-</span> use_ <span style="color: #ce537a; font-weight: bold;">GetParsedModule</span> file
+        deps <span style="color: #7590db;">&lt;-</span> use_ <span style="color: #ce537a; font-weight: bold;">GetDependencies</span> file
+        tms <span style="color: #7590db;">&lt;-</span> uses_ <span style="color: #ce537a; font-weight: bold;">TypeCheck</span> deps
+        setPriority <span style="color: #ce537a; font-weight: bold;">PriorityTypeCheck</span>
+        liftIO <span style="color: #7590db;">$</span> typecheckModule pm tms
 </pre>
 </div>
 
 <p>
-Type checking is much slower than parsing so we attach a lower priority to this rule to keep the IDE responsive. There&rsquo;s a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency graph pretty easily.
+Type checking is much slower than parsing so we attach a lower priority to this rule to keep the IDE responsive. There's a little hand waving in these examples, but it shows how you can pull the information you need out of shake and build a dependency graph pretty easily.
 </p>
 
 <p>
@@ -67,17 +68,17 @@ Shake takes care of all the heavy lifting such as caching/garbage collection. Ea
 </p>
 
 <div class="org-src-container">
-<pre class="src src-haskell"><span class="org-haskell-keyword">type</span> <span class="org-haskell-keyword">instance</span> <span class="org-haskell-type">RuleResult</span> <span class="org-haskell-type">GetParsedModule</span> <span class="org-haskell-operator">=</span> <span class="org-haskell-type">ParsedModule</span>
-<span class="org-haskell-keyword">type</span> <span class="org-haskell-keyword">instance</span> <span class="org-haskell-type">RuleResult</span> <span class="org-haskell-type">TypeCheck</span> <span class="org-haskell-operator">=</span> <span class="org-haskell-type">TcModuleResult</span>
+<pre class="src src-haskell"><span style="color: #4f97d7; font-weight: bold;">type</span> <span style="color: #4f97d7; font-weight: bold;">instance</span> <span style="color: #ce537a; font-weight: bold;">RuleResult</span> <span style="color: #ce537a; font-weight: bold;">GetParsedModule</span> <span style="color: #7590db;">=</span> <span style="color: #ce537a; font-weight: bold;">ParsedModule</span>
+<span style="color: #4f97d7; font-weight: bold;">type</span> <span style="color: #4f97d7; font-weight: bold;">instance</span> <span style="color: #ce537a; font-weight: bold;">RuleResult</span> <span style="color: #ce537a; font-weight: bold;">TypeCheck</span> <span style="color: #7590db;">=</span> <span style="color: #ce537a; font-weight: bold;">TcModuleResult</span>
 </pre>
 </div>
 <p>
-Once you&rsquo;ve written your rules wire them together in your mainRule then run that rule in the shake database.
+Once you've written your rules wire them together in your mainRule then run that rule in the shake database.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-haskell"><span class="org-haskell-definition">mainRule</span> <span class="org-haskell-operator">::</span> <span class="org-haskell-type">Rules</span> <span class="org-haskell-constructor">()</span>
-<span class="org-haskell-definition">mainRule</span> <span class="org-haskell-operator">=</span> <span class="org-haskell-keyword">do</span>
+<pre class="src src-haskell"><span style="color: #bc6ec5; font-weight: bold;">mainRule</span> <span style="color: #7590db;">::</span> <span style="color: #ce537a; font-weight: bold;">Rules</span> <span style="color: #4f97d7; font-weight: bold;">()</span>
+<span style="color: #bc6ec5; font-weight: bold;">mainRule</span> <span style="color: #7590db;">=</span> <span style="color: #4f97d7; font-weight: bold;">do</span>
     getParsedModuleRule
     getLocatedImportsRule
     getDependencyInformationRule
@@ -96,7 +97,7 @@ IDE Core allows a far more à la carte approach to putting together your IDE. Yo
 </p>
 
 <p>
-It&rsquo;s not ready for primetime at the moment, currently it&rsquo;s a little light on IDE features and can only get dependencies with a specially crafted .ghci file. I&rsquo;m running a project with Neil Mitchell at Zurihac this weekend for anyone who feels like getting involved and contributing some IDE rules.
+It's not ready for primetime at the moment, currently it's a little light on IDE features and can only get dependencies with a specially crafted .ghci file. I'm running a project with Neil Mitchell at Zurihac this weekend for anyone who feels like getting involved and contributing some IDE rules.
 </p>
 
 <p>

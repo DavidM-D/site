@@ -2,7 +2,7 @@
 title: Shaking up the IDE
 ---
 
-Recently at Digital Asset we open sourced our programming language [DAML](https://daml.com/), but I'm not going to talk about that today. Nestled inside its compiler is the [Haskell IDE Core](https://github.com/digital-asset/daml/tree/master/compiler/haskell-ide-core). I'm going to explain what that project is in this blog post.
+Recently at Digital Asset we open sourced our programming language [DAML](https://daml.com/), but I'm not going to talk about that today. Nestled inside its compiler is the [Haskell IDE Core](https://github.com/digital-asset/ghcide)[1]. I'm going to explain what that project is in this blog post.
 
 You might ask, what is some part of a Haskell IDE doing inside of DAML? DAML is built on a tweaked version of the GHC API using [GHC Lib](https://neilmitchell.blogspot.com/2019/02/announcing-ghc-lib.html). Rather than writing our own parser, type checker etc we piggyback off the fine work done for GHC. 
 
@@ -64,7 +64,11 @@ It's not ready for primetime at the moment, currently it's a little light on IDE
 
 The hope is that we can add this to [Haskell IDE Engine](https://github.com/haskell/haskell-ide-engine) as a dependency to simplify the architecture and as an improvement on the existing plugin architecture. 
 
+
 ---
+
+[1. This has since been renamed GHC IDE and split out into it's own repository]{.weak}
+
 [Opinions are my own and not the views of my employer]{.weak}
 
 [David Millar-Durrant - 13 Jun 2019]{.weak}

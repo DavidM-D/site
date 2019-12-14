@@ -1,6 +1,5 @@
-
 #+INCLUDE: "../org-template.org"
-#+EXPORT_FILE_NAME: ../public/p/Shaking-up-the-IDE.html
+#+EXPORT_FILE_NAME: ../public/p/shaking-up-the-IDE.html
 #+TITLE: Shaking up the IDE
 #+DATE: 13-06-2019
 

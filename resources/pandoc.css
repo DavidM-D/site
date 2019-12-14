@@ -41,26 +41,6 @@ a:focus {
   outline: thin dotted;
 }
 
-*::-moz-selection {
-  background: rgba(255, 255, 0, 0.3);
-  color: #000;
-}
-
-*::selection {
-  background: rgba(255, 255, 0, 0.3);
-  color: #000;
-}
-
-a::-moz-selection {
-  background: rgba(255, 255, 0, 0.3);
-  color: #0645ad;
-}
-
-a::selection {
-  background: rgba(255, 255, 0, 0.3);
-  color: #0645ad;
-}
-
 p {
   margin: 1em 0;
 }
@@ -326,16 +306,30 @@ table td {
     page-break-after: avoid;
   }
 }
-.sourceCode{
-    background-color: rgb(35, 35, 35);
+.src{
+    background-color: #212026;
+    color: #fdf6e3;
     padding-top: 3px;
     padding-bottom: 3px;
     border-radius: 3px;
-}
-a.sourceLine{
     padding-left: 4px;
     padding-right: 4px;
+    line-height: 1.3em;
 }
+
+.footpara {
+    width: 99%;
+    text-alignt: left;
+    float: right;
+    padding: 0;
+    margin: 0;
+}
+
+.footdef {
+    line-height: 3em;
+}
+
+
 code span.ot { color: rgb(230, 205, 105) ; } /* Other */
 code span.dt {color: rgb(85, 181, 219); }
 code span.op {color: rgb(159, 202, 86); }
@@ -345,4 +339,9 @@ code {color: rgb(160, 116, 196); }
 
 span.weak {
     color: rgb(120,120,120);
+}
+
+.footnotes {
+    display:none;
+    background-color: red;
 }

@@ -1,0 +1,2 @@
+#+OPTIONS: toc:nil html-postamble:nil html-style:nil html-scripts:nil html-doctype:html5
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../pandoc.css" />

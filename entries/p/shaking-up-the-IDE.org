@@ -1,5 +1,4 @@
-#+INCLUDE: "../org-template.org"
-#+EXPORT_FILE_NAME: ../public/p/shaking-up-the-IDE.html
+#+EXPORT_FILE_NAME: ../../public/p/shaking-up-the-IDE.html
 #+TITLE: Shaking up the IDE
 #+DATE: 13-06-2019
 
@@ -69,3 +68,4 @@ It's not ready for primetime at the moment, currently it's a little light on IDE
 The hope is that we can add this to [[https://github.com/haskell/haskell-ide-engine][Haskell IDE Engine]] as a dependency to simplify the architecture and as an improvement on the existing plugin architecture. 
 
 -----
+#+INCLUDE: "../../org-template.org"

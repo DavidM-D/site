@@ -12,12 +12,13 @@ html {
 body {
   color: #444;
   font:18px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  font-size: 12px;
   line-height: 1.7;
   padding: 1em;
   margin: auto;
   max-width: 42em;
   background: #fefefe;
+  text-justify: auto;
+  text-align: justify;
 }
 
 a {
@@ -306,6 +307,7 @@ table td {
   }
 }
 .src{
+    text-align: left;
     background-color: #212026;
     color: #fdf6e3;
     padding-top: 3px;
@@ -314,11 +316,14 @@ table td {
     padding-left: 4px;
     padding-right: 4px;
     line-height: 1.3em;
+    border-style: solid;
+    border-radius: 3px;
+    border-color: #212026;
 }
 
 .footpara {
     width: 99%;
-    text-alignt: left;
+    text-align: left;
     float: right;
     padding: 0;
     margin: 0;
